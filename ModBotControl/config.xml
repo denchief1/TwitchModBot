@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<config>
+	<streamer>futcher_</streamer>
+	<obsUrl>ws://127.0.0.1:4455</obsUrl>
+	<obsPassword>testpassword</obsPassword>
+	<replayLength>10</replayLength>
+	<replayHotkey>F9</replayHotkey>
+</config>
