@@ -27,14 +27,22 @@ namespace TwitchAPI
         /// <param name="broadcasterChannelId">Twitch User ID of the streamer's chat to shoutout in</param>
         /// <param name="targetBroadcasterId">Twitch User ID of the target of the shoutout</param>
         /// <param name="senderId">Twitch ID of the sender (has to be the auth token user)</param>
-        internal Task<string> SendShoutOut(string broadcasterChannelId, string targetBroadcasterId)
+        internal bool SendShoutOut(string broadcasterChannelId, string targetBroadcasterId)
         {
-            string soUrl = $"https://api.twitch.tv/helix/chat/shoutouts?from_broadcaster_id={broadcasterChannelId}&to_broadcaster_id={targetBroadcasterId}&moderator_id={apiSender.authToken.UserID}";
+            string soUrl = $"https://api.twitch.tv/helix/chat/shoutouts?from_broadcaster_id={broadcasterChannelId}&to_broadcaster_id={targetBroadcasterId}&moderator_id={apiSender.dataToken.UserID}";
             APIRequest request = new APIRequest();
             request.Url = soUrl;
             request.RequestType = "post";
-            return apiSender.SendRequestAsync(request);
-           
+            string result = apiSender.SendRequestAsync(request).Result;
+            if (string.IsNullOrEmpty(result))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
         }
 
     }

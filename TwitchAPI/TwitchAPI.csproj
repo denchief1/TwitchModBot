@@ -1,12 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>bff10beb-0fc8-4396-8669-9d861eddcf15</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="API\Core\APIService.cs~RFa024698b.TMP" />
     <None Remove="SendApiRequest.cs~RF7c52c021.TMP" />
   </ItemGroup>
 

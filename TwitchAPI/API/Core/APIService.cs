@@ -14,14 +14,15 @@ namespace TwitchAPI.API.Core
 {
     public class APIService 
     {
-        internal AuthToken authToken;
+        internal DataToken dataToken;
         private readonly SendApiRequest apiSender;
         private readonly ClientInfo clientInfo;
+        private bool requestLoop = false;
 
-        public APIService(AuthToken _authToken, SendApiRequest _apiSender, ClientInfo _clientInfo)
+        public APIService(DataToken _dataToken, SendApiRequest _apiSender, ClientInfo _clientInfo)
         {
 
-            authToken = _authToken;
+            dataToken = _dataToken;
             apiSender = _apiSender;
             clientInfo = _clientInfo;
         }
@@ -29,13 +30,36 @@ namespace TwitchAPI.API.Core
 
         internal Task<string> SendRequestAsync(APIRequest request)
         {
-            HttpResponseMessage response = apiSender.SendRequest(request, authToken).Result;
+            HttpResponseMessage response = apiSender.SendRequest(request, dataToken.AuthToken).Result;
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                RefreshToken();
-                return SendRequestAsync(request);
+                if (requestLoop == false)
+                {
+                    RefreshToken();
+                    requestLoop = true;
+                    return SendRequestAsync(request);
+                }
+                else
+                {
+                    requestLoop = false;
+                    return Task.Run(() => string.Empty);
+                }
+                
             }
-            return response.Content.ReadAsStringAsync();
+            if ((response.StatusCode == System.Net.HttpStatusCode.OK))
+            {
+                requestLoop = false;
+                return response.Content.ReadAsStringAsync();
+            }
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return Task.Run(() => "true");
+            }
+            else
+            {
+                requestLoop = false;
+                return Task.Run(() => string.Empty);
+            }
 
 
         }
@@ -47,7 +71,7 @@ namespace TwitchAPI.API.Core
                 { "client_id", clientInfo.ClientId },
                 { "client_secret", clientInfo.ClientSecret },
                 { "grant_type", "refresh_token" },
-                { "refresh_token", authToken.RefreshToken }
+                { "refresh_token", dataToken.AuthToken.RefreshToken }
             };
 
             FormUrlEncodedContent content = new FormUrlEncodedContent(values);
@@ -59,8 +83,8 @@ namespace TwitchAPI.API.Core
             string responseString = response.Content.ReadAsStringAsync().Result;
 
             RefreshToken refreshToken = JsonConvert.DeserializeObject<RefreshToken>(responseString);
-            authToken.RefreshToken = refreshToken.NewRefreshToken;
-            authToken.AccessToken = refreshToken.AccessToken;
+            dataToken.AuthToken.RefreshToken = refreshToken.NewRefreshToken;
+            dataToken.AuthToken.AccessToken = refreshToken.AccessToken;
         }
 
     }

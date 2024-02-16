@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using TwitchAPI.API.Models;
 using TwitchAPI.Models;
@@ -14,10 +15,22 @@ namespace TwitchAPI.API.Core
     public class Authenticate
     {
         private static readonly HttpClient client = new HttpClient();
-        internal static readonly string clientId = ;
-        private static readonly string clientSecret = ;
         private static readonly string redirect = "http://localhost:8080";
         private static HttpListener listener = new HttpListener();
+        private static readonly string clientSecret;
+        internal static readonly string clientId;
+
+
+
+        static Authenticate() 
+        {
+            IConfigurationRoot config = new ConfigurationBuilder()
+            .AddUserSecrets<Authenticate>()
+            .Build();
+            clientId = config["CLIENT_ID"];
+            clientSecret = config["CLIENT_SECRET"];
+        }
+
 
         public static Tuple<string, string> GenerateAuthUrl()
         {
@@ -31,10 +44,13 @@ namespace TwitchAPI.API.Core
             string responseType = "code";
             string state = RandomString(32);
 
+
+            
+
             string url = $"https://id.twitch.tv/oauth2/authorize?response_type={responseType}&client_id={clientId}&redirect_uri={redirect}&state={state}&scope={scope}&force_verify=true";
             return new Tuple<string, string>(url, state);
         }
-        public static Tuple<AuthToken,ClientInfo> StartOauth(string state)
+        public static Tuple<DataToken,ClientInfo> StartOauth(string state)
         {
 
             string rawResponse = Listener(redirect);
@@ -49,10 +65,10 @@ namespace TwitchAPI.API.Core
             ClientInfo clientInfo = new ClientInfo();
             clientInfo.ClientId = clientId;
             clientInfo.ClientSecret = clientSecret;
-            return new Tuple<AuthToken, ClientInfo>(GetToken(responseValues, state), clientInfo);
+            return new Tuple<DataToken, ClientInfo>(GetToken(responseValues, state), clientInfo);
         }
 
-        private static AuthToken GetToken(List<Tuple<string, string>> responseValues, string state)
+        private static DataToken GetToken(List<Tuple<string, string>> responseValues, string state)
         {
 
             string code = string.Empty;
@@ -99,8 +115,11 @@ namespace TwitchAPI.API.Core
             string url = "https://id.twitch.tv/oauth2/userinfo";
             responseString = SendGetRequest(url,token);
             OauthUserInfo userInfo = JsonConvert.DeserializeObject<OauthUserInfo>(responseString);
-            token.UserID = userInfo.UserId;
-            return token;
+
+            DataToken data = new DataToken();
+            data.AuthToken = token;
+            data.UserID = userInfo.UserId;
+            return data;
 
         }
 

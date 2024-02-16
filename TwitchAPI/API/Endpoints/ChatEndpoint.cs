@@ -22,38 +22,65 @@ namespace TwitchAPI.API.Endpoints
             apiSender = StartConnection.host.Services.GetRequiredService<APIService>();
         }
 
-        internal void SendChatMessage(string broadcasterLogin, string chatMessage)
+        /// <summary>
+        /// Send a chat message with the broadcaster's twitch login name
+        /// </summary>
+        /// <param name="broadcasterLogin">Twitch Login Name</param>
+        /// <param name="chatMessage">Chat message to send</param>
+        /// <returns>If the chat message was sent successfully</returns>
+        internal bool SendChatMessage(string broadcasterLogin, string chatMessage)
         {
             string url = "https://api.twitch.tv/helix/chat/messages";
 
             UsersEndpoint getUserInfo = new UsersEndpoint();
             string[] userNames = { broadcasterLogin };
-            Users users = getUserInfo.GetUserId(userNames);
+            Tuple<bool,Users> usersResponse = getUserInfo.GetUserId(userNames);
+            if (usersResponse.Item1 == false)
+            {
+                return false;
+            }
+            else
+            {
+                Users users = usersResponse.Item2;
+                ChatData chatData = new ChatData();
+                chatData.SenderId = apiSender.dataToken.UserID;
+                chatData.BroadcasterId = users.UserData.Where(x => x.Login == broadcasterLogin).First().Id;
+                chatData.Message = chatMessage;
 
+                APIRequest request = new APIRequest();
+                request.Url = url;
+                request.Content = chatData;
+                request.RequestType = "post";
 
-            ChatData chatData = new ChatData();
-            chatData.SenderId = apiSender.authToken.UserID;
-            chatData.BroadcasterId = users.UserData.Where(x => x.Login == broadcasterLogin).First().Id;
-            chatData.Message = chatMessage;
+                string result = apiSender.SendRequestAsync(request).Result;
+                if (String.IsNullOrEmpty(result))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
 
-            APIRequest request = new APIRequest();
-            request.Url = url;
-            request.Content = chatData;
-            request.RequestType = "post";
-
-            var test = apiSender.SendRequestAsync(request).Result;
-            //var test = apiRequest.SendPostRequest(url, token, chatData);
+            
+            
 
         }
 
-
-        internal Task<string> SendChatMessageById(string broadcasterID, string chatMessage)
+        /// <summary>
+        /// Send a chat message with the broadcaster's Twitch ID
+        /// </summary>
+        /// <param name="broadcasterID">The twitch ID of the user</param>
+        /// <param name="chatMessage">The chat message to send</param>
+        /// <returns>If the chat message was sent successfully</returns>
+        internal bool SendChatMessageById(string broadcasterID, string chatMessage)
         {
             string url = "https://api.twitch.tv/helix/chat/messages";
 
 
             ChatData chatData = new ChatData();
-            chatData.SenderId = apiSender.authToken.UserID;
+            chatData.SenderId = apiSender.dataToken.UserID;
             chatData.BroadcasterId = broadcasterID;
             chatData.Message = chatMessage;
 
@@ -62,9 +89,15 @@ namespace TwitchAPI.API.Endpoints
             request.Content = chatData;
             request.RequestType = "post";
 
-            return apiSender.SendRequestAsync(request);
-            //Console.WriteLine(test);
-            //var test = apiRequest.SendPostRequest(url, token, chatData);
+            string result = apiSender.SendRequestAsync(request).Result;
+            if (String.IsNullOrEmpty(result))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
 
         }
     }

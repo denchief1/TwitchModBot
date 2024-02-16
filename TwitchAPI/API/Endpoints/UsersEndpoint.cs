@@ -21,7 +21,12 @@ namespace TwitchAPI.API.Endpoints
             apiSender = StartConnection.host.Services.GetRequiredService<APIService>();
         }
 
-        internal Users GetUserId (string[] userNames)
+        /// <summary>
+        /// Get user Ids from their usernames
+        /// </summary>
+        /// <param name="userNames">an array of usernames</param>
+        /// <returns>If it was successful and the user ids</returns>
+        internal Tuple<bool,Users> GetUserId (string[] userNames)
         {
             string url = "https://api.twitch.tv/helix/users?";
 
@@ -43,8 +48,20 @@ namespace TwitchAPI.API.Endpoints
             request.RequestType = "get";
 
 
-            string response = apiSender.SendRequestAsync(request).Result;
-            return JsonConvert.DeserializeObject<Users>(response);
+            string result = apiSender.SendRequestAsync(request).Result;
+            if (string.IsNullOrEmpty(result))
+            {
+                Users users = JsonConvert.DeserializeObject<Users>(result);
+                return new Tuple<bool, Users>(false, users);
+            }
+            else
+            {
+                Users users =  JsonConvert.DeserializeObject<Users>(result);
+                return new Tuple<bool, Users>(true, users);
+            }
+
+            
+            
         }
 
     }

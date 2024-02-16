@@ -52,8 +52,8 @@ namespace OBSConnector
         public ClipList CreateClip(string broadcasterLogin)
         {
             ClipEndpoint clipEndpoint = new ClipEndpoint();
-            Task<string> result = clipEndpoint.CreateClipByLogin(broadcasterLogin);
-            ClipList clipList = JsonConvert.DeserializeObject<ClipList>(result.Result);
+            Tuple<bool,string> result = clipEndpoint.CreateClipByLogin(broadcasterLogin);
+            ClipList clipList = JsonConvert.DeserializeObject<ClipList>(result.Item2);
             return clipList;
         }
 

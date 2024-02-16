@@ -46,6 +46,10 @@
             cb_replayKey = new ComboBox();
             lb_replayKey = new Label();
             rtb_clipsCreated = new RichTextBox();
+            lb_redemptions = new Label();
+            cb_redemptions = new ComboBox();
+            chkbx_twitchAPI = new CheckBox();
+            chkbx_twitchWSS = new CheckBox();
             SuspendLayout();
             // 
             // btn_twtichConnect
@@ -202,6 +206,8 @@
             // 
             // rtb_clipsCreated
             // 
+            rtb_clipsCreated.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            rtb_clipsCreated.BackColor = Color.White;
             rtb_clipsCreated.Location = new Point(38, 326);
             rtb_clipsCreated.Name = "rtb_clipsCreated";
             rtb_clipsCreated.ReadOnly = true;
@@ -209,11 +215,55 @@
             rtb_clipsCreated.TabIndex = 21;
             rtb_clipsCreated.Text = "";
             // 
+            // lb_redemptions
+            // 
+            lb_redemptions.AutoSize = true;
+            lb_redemptions.Location = new Point(38, 229);
+            lb_redemptions.Name = "lb_redemptions";
+            lb_redemptions.Size = new Size(118, 15);
+            lb_redemptions.TabIndex = 22;
+            lb_redemptions.Text = "Redemptions Hotkey";
+            // 
+            // cb_redemptions
+            // 
+            cb_redemptions.FormattingEnabled = true;
+            cb_redemptions.Location = new Point(162, 226);
+            cb_redemptions.Name = "cb_redemptions";
+            cb_redemptions.Size = new Size(121, 23);
+            cb_redemptions.TabIndex = 23;
+            cb_redemptions.SelectedIndexChanged += cb_redemptions_SelectedIndexChanged;
+            // 
+            // chkbx_twitchAPI
+            // 
+            chkbx_twitchAPI.AutoSize = true;
+            chkbx_twitchAPI.Enabled = false;
+            chkbx_twitchAPI.Location = new Point(357, 139);
+            chkbx_twitchAPI.Name = "chkbx_twitchAPI";
+            chkbx_twitchAPI.Size = new Size(135, 19);
+            chkbx_twitchAPI.TabIndex = 24;
+            chkbx_twitchAPI.Text = "Connected to Twitch";
+            chkbx_twitchAPI.UseVisualStyleBackColor = true;
+            // 
+            // chkbx_twitchWSS
+            // 
+            chkbx_twitchWSS.AutoSize = true;
+            chkbx_twitchWSS.Enabled = false;
+            chkbx_twitchWSS.Location = new Point(357, 164);
+            chkbx_twitchWSS.Name = "chkbx_twitchWSS";
+            chkbx_twitchWSS.Size = new Size(141, 19);
+            chkbx_twitchWSS.TabIndex = 25;
+            chkbx_twitchWSS.Text = "Shoutouts Connected";
+            chkbx_twitchWSS.UseVisualStyleBackColor = true;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(929, 492);
+            Controls.Add(chkbx_twitchWSS);
+            Controls.Add(chkbx_twitchAPI);
+            Controls.Add(cb_redemptions);
+            Controls.Add(lb_redemptions);
             Controls.Add(rtb_clipsCreated);
             Controls.Add(lb_replayKey);
             Controls.Add(cb_replayKey);
@@ -233,7 +283,7 @@
             Controls.Add(tb_streamerName);
             Controls.Add(btn_twtichConnect);
             Name = "Main";
-            Text = "Form1";
+            Text = "Twitch Small Streamer Modbot";
             ResumeLayout(false);
             PerformLayout();
         }
@@ -258,5 +308,9 @@
         private ComboBox cb_replayKey;
         private Label lb_replayKey;
         private RichTextBox rtb_clipsCreated;
+        private Label lb_redemptions;
+        private ComboBox cb_redemptions;
+        private CheckBox chkbx_twitchAPI;
+        private CheckBox chkbx_twitchWSS;
     }
 }

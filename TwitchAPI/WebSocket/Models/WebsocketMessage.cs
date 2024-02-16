@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TwitchAPI.WebSocket.Models
 {
-    public class WelcomeMessage
+    public class WebsocketMessage
     {
         [JsonProperty("metadata")]
         public Metadata Metadata { get; set; }
@@ -46,7 +46,7 @@ namespace TwitchAPI.WebSocket.Models
         public DateTimeOffset ConnectedAt { get; set; }
 
         [JsonProperty("keepalive_timeout_seconds")]
-        public long KeepaliveTimeoutSeconds { get; set; }
+        public long? KeepaliveTimeoutSeconds { get; set; }
 
         [JsonProperty("reconnect_url")]
         public object ReconnectUrl { get; set; }

@@ -23,6 +23,12 @@ namespace TwitchAPI.Models
 
         [JsonProperty("token_type")]
         public string TokenType { get; set; }
+        
+    }
+
+    public class DataToken
+    {
+        public AuthToken AuthToken { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string UserID { get; set; }
     }

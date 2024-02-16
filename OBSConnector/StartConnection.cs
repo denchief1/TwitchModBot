@@ -16,20 +16,30 @@ using TwitchAPI.WebSocket;
 
 namespace OBSConnector
 {
-    public class StartConnection
+    public class StartConnection : IDisposable
     {
         public static IHost host;
+        CancellationTokenSource cts;
         public  StartConnection(string obsWsUrl, string obsWsPassword)
         {
+            cts = new CancellationTokenSource();
             HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
-            builder.Services.AddSingleton(serviceProvider => new OBSConnection(obsWsUrl, obsWsPassword));
+            builder.Services.AddSingleton(serviceProvider => new OBSConnection(obsWsUrl, obsWsPassword,cts.Token ));
 
 
             IHost _host = builder.Build();
             _host.RunAsync();
             host = _host;   
 
+        }
+
+        public void Dispose()
+        {
+            cts.Cancel();
+            Task stop = host.StopAsync();
+            stop.Wait();
+            host.Dispose();
         }
 
 

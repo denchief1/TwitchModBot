@@ -17,9 +17,8 @@ namespace OBSConnector.Websocket
         private TaskCompletionSource<bool> disconnected = new TaskCompletionSource<bool>();
         private TaskCompletionSource<bool> connected = new TaskCompletionSource<bool>();
         private bool obsConnected = false;
-        public OBSConnection(string _connectionUrl, string _connecitonPassword) 
+        public OBSConnection(string _connectionUrl, string _connecitonPassword, CancellationToken token) 
         { 
-            CancellationToken token = new CancellationToken();
             connectionUrl = _connectionUrl;
             connectionPassword = _connecitonPassword;
             obs = new OBSWebsocket();
@@ -28,6 +27,7 @@ namespace OBSConnector.Websocket
             {
                 Thread.Sleep(10);
             }
+            token.Register(() => StopAsync(token));
         }
 
         internal OBSWebsocket GetObsWS()

@@ -13,18 +13,26 @@ namespace ModBotControl
 {
     public partial class Main : Form
     {
-        private TwtichLogin login = new TwtichLogin();
+        private TwtichLogin login;
         private string configPath = @"config.xml";
 
+        private string twitchDisconnectText = "Disconnect From Twitch";
+        private string twitchConnectText = "Connect To Twitch";
+        private bool connnectedToTwitch = false;
         private KeyHandler ghk;
+
+        private TwitchAPI.StartConnection twitchApi;
+        private OBSConnector.StartConnection obsConnector;
 
         public Main()
         {
             InitializeComponent();
-            btn_twtichConnect.Enabled = false;
+            btn_twtichConnect.Enabled = connnectedToTwitch;
+            btn_twtichConnect.Text = twitchConnectText;
             LoadConfig();
             CheckValuesTwitchEnable();
-            LoadHotKeyOptions();
+            LoadHotKeyOptions(cb_replayKey);
+            LoadHotKeyOptions(cb_redemptions);
         }
 
         internal void LoadScences()
@@ -43,7 +51,7 @@ namespace ModBotControl
             else
             {
                 lstbx_Scences.Items.Clear();
-                
+
                 var scences = scenceAndSourceInfo.GetScences();
                 foreach (var scence in scences.Scenes)
                 {
@@ -59,14 +67,14 @@ namespace ModBotControl
             ghk = new KeyHandler(hotkey, this);
             ghk.Register();
         }
-        private void LoadHotKeyOptions()
+        private void LoadHotKeyOptions(ComboBox comboBox)
         {
             string defaultText = "Select Key";
             Keys[] keys = Enum.GetValues(typeof(Keys)).Cast<Keys>().ToArray();
 
             foreach (Keys key in keys)
             {
-                cb_replayKey.Items.Add(key);
+                comboBox.Items.Add(key);
             }
             string hotkey = GetItemFromConfig("replayHotkey");
             if (hotkey != "")
@@ -76,8 +84,8 @@ namespace ModBotControl
             }
             else
             {
-                cb_replayKey.Items.Add(defaultText);
-                cb_replayKey.SelectedItem = defaultText;
+                comboBox.Items.Add(defaultText);
+                comboBox.SelectedItem = defaultText;
             }
 
         }
@@ -178,29 +186,44 @@ namespace ModBotControl
         }
         private void ConnectToTwitch_Click(object sender, EventArgs e)
         {
-
-            AuthToken token = new AuthToken();
-            Tuple<string, string> urlState = Authenticate.GenerateAuthUrl();
-            login.TwitchWebView.Source = new Uri(urlState.Item1);
-            login.Show();
-            Task<Tuple<AuthToken, ClientInfo>> tokenResult = Task.Run(() => Authenticate.StartOauth(urlState.Item2));
-
-            Task continuationTask = tokenResult.ContinueWith((completedTask) =>
+            if (connnectedToTwitch == false)
             {
-                CloseFormOnUIThread();
-                StartBot(tokenResult.Result.Item1, tb_streamerName.Text, tb_obsUrl.Text, tb_obsPassword.Text, tokenResult.Result.Item2);
+                login = new TwtichLogin();
+                DataToken token = new DataToken();
+                Tuple<string, string> urlState = Authenticate.GenerateAuthUrl();
+                login.TwitchWebView.Source = new Uri(urlState.Item1);
+                login.Show();
+                Task<Tuple<DataToken, ClientInfo>> tokenResult = Task.Run(() => Authenticate.StartOauth(urlState.Item2));
 
-            });
+                Task continuationTask = tokenResult.ContinueWith((completedTask) =>
+                {
+                    CloseFormOnUIThread();
+                    StartBot(tokenResult.Result.Item1, tb_streamerName.Text, tb_obsUrl.Text, tb_obsPassword.Text, tokenResult.Result.Item2);
+
+                });
+            }
+            else if (connnectedToTwitch == true)
+            {
+                StopBot();
+                UpdateTwitchConnectionStatus(false);
+            }
+
 
 
         }
-        private void StartBot(AuthToken token, string streamer, string obsWsUrl, string obsWsPassword, ClientInfo clientInfo)
+        private void StartBot(DataToken token, string streamer, string obsWsUrl, string obsWsPassword, ClientInfo clientInfo)
         {
-            TwitchAPI.StartConnection twitchApi = new TwitchAPI.StartConnection(token, streamer, clientInfo);
-            OBSConnector.StartConnection obsConnector = new OBSConnector.StartConnection(obsWsUrl, obsWsPassword);
+            twitchApi = new TwitchAPI.StartConnection(token, streamer, clientInfo);
+            obsConnector = new OBSConnector.StartConnection(obsWsUrl, obsWsPassword);
             Task.Run(() => LoadScences());
-            btn_twtichConnect.Enabled = false;
+            
+        }
 
+        private void StopBot()
+        {
+            obsConnector.Dispose();
+            twitchApi.Dispose();
+            
         }
         private void CloseFormOnUIThread()
         {
@@ -211,15 +234,33 @@ namespace ModBotControl
             }
             else
             {
-                tb_streamerName.Enabled = false;
-                tb_obsUrl.Enabled = false;
-                tb_obsPassword.Enabled = false;
                 login.Close();
+                UpdateTwitchConnectionStatus(true);
+
             }
         }
+
+        private void UpdateTwitchConnectionStatus(bool connected)
+        {
+            connnectedToTwitch = connected;
+            tb_streamerName.Enabled = !connnectedToTwitch;
+            tb_obsUrl.Enabled = !connnectedToTwitch;
+            tb_obsPassword.Enabled = !connnectedToTwitch;
+            cb_redemptions.Enabled = !connnectedToTwitch;
+            if (connnectedToTwitch == false)
+            {
+                btn_twtichConnect.Text = twitchConnectText;
+            }
+            else if (connnectedToTwitch == true)
+            {
+                btn_twtichConnect.Text = twitchDisconnectText;
+            }
+
+        }
+
         private void CheckValuesTwitchEnable()
         {
-            if (!string.IsNullOrEmpty(tb_streamerName.Text) && !string.IsNullOrEmpty(tb_obsUrl.Text) && !string.IsNullOrEmpty(tb_obsPassword.Text))
+            if (!string.IsNullOrEmpty(tb_streamerName.Text) && !string.IsNullOrEmpty(tb_obsUrl.Text) && !string.IsNullOrEmpty(tb_obsPassword.Text) && !string.IsNullOrEmpty(cb_redemptions.Text))
             {
                 btn_twtichConnect.Enabled = true;
             }
@@ -290,7 +331,13 @@ namespace ModBotControl
         }
         private void cb_replayKey_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SaveItemToConfig("replayHotkey",cb_replayKey.Text);
+            SaveItemToConfig("replayHotkey", cb_replayKey.Text);
+        }
+
+        private void cb_redemptions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SaveItemToConfig("redemptionHotkey", cb_redemptions.Text);
+            CheckValuesTwitchEnable();
         }
     }
 }
